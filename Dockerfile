@@ -3,13 +3,12 @@ FROM gradle:8.2.1-jdk17 AS build
 COPY --chown=gradle:gradle . /home/gradle/project
 WORKDIR /home/gradle/project
 
-# Fix quyền thư mục cache
+# Fix quyền thư mục cache (nếu chưa tồn tại thì tạo mới)
 USER root
-RUN chown -R gradle:gradle /home/gradle/.gradle
+RUN mkdir -p /home/gradle/.gradle && chown -R gradle:gradle /home/gradle/.gradle
 
 USER gradle
 RUN gradle clean build --no-daemon
-
 
 # ---- Run Stage ----
 FROM eclipse-temurin:17-jdk
