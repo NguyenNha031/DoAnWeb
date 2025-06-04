@@ -1,0 +1,86 @@
+    package com.nhom10.doanmonhoc.controller;
+    import org.springframework.data.domain.PageRequest;
+    import com.nhom10.doanmonhoc.enums.PostStatus; // 👈 BẮT BUỘC PHẢI CÓ
+    import com.nhom10.doanmonhoc.model.Banner;
+    import com.nhom10.doanmonhoc.model.Post;
+    import com.nhom10.doanmonhoc.repository.BannerRepository;
+    import com.nhom10.doanmonhoc.repository.MenuRepository;
+    import com.nhom10.doanmonhoc.repository.PostRepository;
+    import org.springframework.beans.factory.annotation.Autowired;
+    import org.springframework.stereotype.Controller;
+    import org.springframework.ui.Model;
+    import org.springframework.web.bind.annotation.GetMapping;
+
+    import java.time.Duration;
+    import java.time.LocalDateTime;
+    import java.util.*;
+
+    @Controller
+    public class HomeController {
+
+        @Autowired
+        private BannerRepository bannerRepository;
+
+        @Autowired
+        private MenuRepository menuRepository;
+
+        @Autowired
+        private PostRepository postRepository;
+
+        @GetMapping("/")
+        public String showHomePage(Model model) {
+            // Banner
+            List<Banner> banners = bannerRepository.findAllByOrderByIdAsc();
+            List<Map<String, String>> bannerList = new ArrayList<>();
+            for (Banner b : banners) {
+                Map<String, String> bannerMap = new HashMap<>();
+                bannerMap.put("image", b.getImage());
+                bannerMap.put("tooltip", b.getMota());
+                bannerMap.put("link", b.getIdPage() != null ? "/page/" + b.getIdPage() : "#");
+                bannerList.add(bannerMap);
+            }
+            model.addAttribute("bannerList", bannerList);
+
+            // Menu
+            model.addAttribute("menuItems", menuRepository.getMainMenu());
+
+            // Post - chỉ lấy bài có status = Published
+            List<Post> allPosts = postRepository.findPublishedPostsOrderByPined(PostStatus.Published);
+            List<Map<String, String>> posts = new ArrayList<>();
+            for (Post p : postRepository.findPublishedPostsOrderByPined(PostStatus.Published)) {
+                Post p = allPosts.get(0);
+                Map<String, String> postMap = new HashMap<>();
+                postMap.put("title", p.getTitle());
+                postMap.put("image", p.getImage());
+                postMap.put("tooltip", p.getMota());
+                postMap.put("timeAgo", getTimeAgo(p.getCreatedAt()));
+                postMap.put("link", "/post/" + p.getIdPost());
+                posts.add(postMap);
+            }
+            model.addAttribute("posts", posts);
+            return "index";
+        }
+        private String getTimeAgo(LocalDateTime createdAt) {
+            Duration duration = Duration.between(createdAt, LocalDateTime.now());
+            if (duration.toMinutes() < 1) return "Vừa đăng";
+            if (duration.toMinutes() < 60) return "Đã đăng " + duration.toMinutes() + " phút trước";
+            if (duration.toHours() < 24) return "Đã đăng " + duration.toHours() + " giờ trước";
+            return "Đã đăng " + duration.toDays() + " ngày trước";
+        }
+        @GetMapping("/tin-tuc")
+        public String showAllNews(Model model) {
+            List<Map<String, String>> posts = new ArrayList<>();
+            for (Post p : postRepository.findPublishedPostsOrderByPined(PostStatus.Published)) {
+                Map<String, String> postMap = new HashMap<>();
+                postMap.put("title", p.getTitle());
+                postMap.put("image", p.getImage());
+                postMap.put("tooltip", p.getMota());
+                postMap.put("timeAgo", getTimeAgo(p.getCreatedAt()));
+                postMap.put("link", "/post/" + p.getIdPost());
+                posts.add(postMap);
+            }
+            model.addAttribute("posts", posts);
+            return "news";
+        }
+
+    }

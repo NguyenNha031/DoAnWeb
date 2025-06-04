@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{Fragments/head_frontend :: head(${menu.name}, null)}"></head>
+<body>
+<div th:replace="Fragments/header_frontend :: header"></div>
+
+<div class="container my-5" style="margin-top: 13rem !important">
+  <p class="text-muted" th:text="${page.mota}">Mô tả</p>
+  <hr>
+  <div th:each="item : ${contentHtml}">
+    <div th:utext="${item.code}"></div>
+  </div>
+</div>
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    const currentPath = window.location.pathname;
+    document.querySelectorAll(".navbar-nav .nav-link").forEach(link => {
+      const linkPath = link.getAttribute("href");
+      if (currentPath === linkPath || currentPath.startsWith(linkPath)) {
+        link.classList.add("active");
+      }
+    });
+  });
+</script>
+
+</body>
+</html>

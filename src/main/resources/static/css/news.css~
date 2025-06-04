@@ -1,0 +1,39 @@
+a {
+    text-decoration: none;
+}
+.card {
+    border: 1px solid #e0e0e0;
+    border-radius: 10px;
+    background-color: #fff;
+    box-shadow: 1px 1px 6px 1px rgb(0 0 0 / 50%);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    height: 100%;
+}
+
+.card:hover {
+    transform: translateY(-4px);
+
+}
+
+.card-img-top.news-img {
+    height: 160px;
+    object-fit: cover;
+    border-top-left-radius: 7px;
+    border-top-right-radius: 7px;
+}
+
+.card-body {
+    padding: 12px;
+}
+
+.card-title {
+    font-size: 15px;
+    font-weight: 600;
+    margin-bottom: 6px;
+    line-height: 1.4;
+}
+
+.card p.text-muted {
+    font-size: 13px;
+    margin: 0;
+}

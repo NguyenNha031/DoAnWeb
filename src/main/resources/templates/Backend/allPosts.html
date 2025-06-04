@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Trường Đại học Nha Trang</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+  <link rel="stylesheet" href="/css/Backend/style.css">
+  <link rel="stylesheet" href="/css/Frontend/style.css">
+</head>
+<body>
+  <h1>Posts</h1>
+  <a th:href="@{'/addpost/'+${site.getIdSite()}}" class="addps">Add Post</a>
+  <br>
+  <a href="#">All</a>
+  <a href="#">Published</a>
+  <a href="#">Draft</a>
+  <a href="#">Private</a>
+  <a href="#">Trash</a>
+  <br>
+  <div class="cols" th:each="post : ${posts}">
+    <div class="rows">
+      <img th:src="${post.image}" alt="Tin nổi bật"
+           style="height: 100px; object-fit: cover;">
+      <a th:href="${post.link}" th:title="${post.tooltip}" target="_blank">
+        <h6 th:text="${post.title}"></h6>
+      </a>
+      <p th:text="${post.timeAgo}"></p>
+    </div>
+</body>
+</html>

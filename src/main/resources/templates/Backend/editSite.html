@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head th:replace="~{Fragments/head_backend :: head('Edit Trang chủ', '/css/Backend/home.css')}"></head>
+
+<body>
+<div th:replace="~{Fragments/header_backend :: header}"></div>
+
+<!-- Carousel Banner -->
+<div th:if="${bannerList.size() == 1}">
+  <img th:src="${bannerList[0].image}" th:title="${bannerList[0].tooltip}" class="d-block w-100" alt="Banner">
+</div>
+
+<div th:if="${bannerList.size() > 1}" id="mainCarousel" class="carousel slide" data-bs-ride="carousel" data-bs-interval="4000">
+  <div class="carousel-inner">
+    <div th:each="banner, iterStat : ${bannerList}" th:class="'carousel-item' + (${iterStat.index == 0} ? ' active' : '')">
+      <!--            <a th:href="${banner.link}">-->
+      <a href="#">
+
+        <img th:src="${banner.image}" th:title="${banner.tooltip}" class="d-block w-100" alt="Banner">
+      </a>
+    </div>
+  </div>
+</div>
+
+<!-- News Section -->
+<section class="news-section news-section-post">
+  <div class="container">
+    <h2 class="section-title">TIN TỨC</h2>
+    <a th:href="@{'/tin-tuc/' + ${site.idSite}}" class="">Xem tất cả</a>
+    <div class="news-card" th:each="post : ${posts}">
+      <a th:href="@{'/post/' + ${post.id}}" target="_blank" th:title="${post.tooltip}">
+        <img th:src="${post.image}" alt="Tin nổi bật"  class="img-fluid">
+        <div style="display: flex; justify-content: space-between">
+          <p class="mt-2 fw-bold text-dark news-title" th:text="${post.title}"></p>
+          <p class="text-muted text-end small mt-1" th:text="${post.timeAgo}"></p>
+        </div>
+      </a>
+    </div>
+
+
+
+
+    <!--            &lt;!&ndash; Cột 2: Carousel tin ảnh &ndash;&gt;-->
+    <!--            <div class="col-md-3">-->
+    <!--                <div class="mb-3">-->
+    <!--                    <a href="#" class="text-decoration-none">-->
+    <!--                        <img src="https://www.hust.edu.vn/assets/sys/news/2025_05/20250509-cbo_6211.jpg" class="img-fluid w-100 mb-3" alt="News 1">-->
+    <!--                        <h6 class="text-dark">Ra mắt Hội đồng Viện Công nghệ Năng lượng Bách khoa Hà Nội: Vì một...</h6>-->
+    <!--                    </a>-->
+    <!--                </div>-->
+    <!--                <div class="mb-3">-->
+    <!--                    <a href="#" class="text-decoration-none">-->
+    <!--                        <img src="https://www.hust.edu.vn/assets/sys/news/2025_05/20250509-cbo_6042.jpg" class="img-fluid w-100 mb-3" alt="News 2">-->
+    <!--                        <h6 class="text-dark">Gần 3.000 tân cử nhân, tân kỹ sư tỏa sáng tại Lễ tốt nghiệp Bách khoa...</h6>-->
+    <!--                    </a>-->
+    <!--                </div>-->
+    <!--            </div>-->
+
+    <!-- Cột 3: Danh sách tin -->
+    <!--            <div class="col-md-2">-->
+    <!--                <ul class="list-unstyled small">-->
+    <!--                    <li><a href="#">Đại học Bách khoa Hà Nội có thêm một phó giám đốc</a></li>-->
+    <!--                    <li><a href="#">Học sinh Trường THPT Đô Lương 3 (Nghệ An) dẫn đầu top 10 thí sinh điểm...</a></li>-->
+    <!--                    <li><a href="#">Tập đoàn Xăng dầu Việt Nam trao 20 suất học bổng cho sinh viên Bách...</a></li>-->
+    <!--                    <li><a href="#">Kỳ họp thứ 10 Hội đồng đại học Đại học Bách khoa Hà Nội</a></li>-->
+    <!--                    <li><a href="#">Phó Chủ nhiệm Ủy ban Văn hóa và Xã hội của Quốc hội: “Bách khoa Hà Nộ...</a></li>-->
+    <!--                </ul>-->
+    <!--            </div>-->
+  </div>
+</section>
+
+<!-- Events Section -->
+<section class="news-section bg-light">
+  <div class="container">
+    <h2 class="section-title">Sự kiện</h2>
+    <div class="row">
+      <div class="col-md-6">
+        <div class="news-card">
+          <img src="event1.jpg" alt="Event 1">
+          <h5 class="mt-3">Sự kiện 1</h5>
+          <p>Chi tiết sự kiện...</p>
+        </div>
+      </div>
+      <div class="col-md-6">
+        <div class="news-card">
+          <img src="event2.jpg" alt="Event 2">
+          <h5 class="mt-3">Sự kiện 2</h5>
+          <p>Chi tiết sự kiện...</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Footer -->
+<footer>
+  <div class="container">
+    <div class="row">
+      <div class="col-md-4">
+        <h4>Trường Đại học Nha Trang</h4>
+        <p>02 Nguyễn Đình Chiểu, Vĩnh Thọ, Nha Trang, Khánh Hòa</p>
+        <p>Điện thoại: (+84) 258 3831 204</p>
+        <p>Email: dhnt@ntu.edu.vn</p>
+      </div>
+      <div class="col-md-4">
+        <h4>Liên kết nhanh</h4>
+        <ul class="list-unstyled">
+          <li><a href="#" class="text-white">Tuyển sinh</a></li>
+          <li><a href="#" class="text-white">Đào tạo</a></li>
+          <li><a href="#" class="text-white">Nghiên cứu khoa học</a></li>
+        </ul>
+      </div>
+
+      <div class="col-md-4">
+        <h4>Kết nối với chúng tôi</h4>
+        <div class="social-links">
+          <a href="#" class="text-white me-3"><i class="fab fa-facebook-f"></i></a>
+          <a href="#" class="text-white me-3"><i class="fab fa-twitter"></i></a>
+          <a href="#" class="text-white me-3"><i class="fab fa-youtube"></i></a>
+        </div>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    const currentPath = window.location.pathname;
+    document.querySelectorAll(".navbar-nav .nav-link").forEach(link => {
+      const linkPath = link.getAttribute("href");
+      if (currentPath === linkPath || currentPath.startsWith(linkPath)) {
+        link.classList.add("active");
+      }
+    });
+  });
+</script>
+
+</body>
+</html>

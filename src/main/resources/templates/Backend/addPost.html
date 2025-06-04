@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${site.getName()}"></title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <link rel="stylesheet" href="/css/Backend/style.css">
+</head>
+<body>
+<form th:action="@{'/addpost/'+${site.getIdSite()}}" method="post">
+    <textarea rows="1" cols="50" placeholder="Add title" name="title"></textarea><br>
+    <div id="allblock" name="allblock">
+        <textarea rows="1" cols="30" placeholder="Type/to choose a block" name="block"></textarea>
+        <!-- Nút + đầu tiên -->
+        <button type="button" class="btn btn-dark btn-add-block">+</button>
+
+        <!-- Popup custom menu -->
+        <div id="blockMenu" class="card p-3 shadow" style="display: none; position: absolute; z-index: 1000; inset-block-start: 70px;">
+            <div class="container" style="min-width: 520px;">
+                <div class="row row-cols-4 g-2">
+                    <div class="col text-center">
+                        <button type="button" class="btn btn-outline-secondary w-100 py-3" name="paragraph">
+                            <i class="fas fa-paragraph fa-2x d-block"></i>
+                            <span>Paragraph</span>
+                        </button>
+                    </div>
+                    <div class="col text-center">
+                        <button type="button" class="btn btn-outline-secondary w-100 py-3" name="table">
+                            <i class="fas fa-table fa-2x d-block"></i>
+                            <span>Table</span>
+                        </button>
+                    </div>
+                    <div class="col text-center">
+                        <button type="button" class="btn btn-outline-secondary w-100 py-3" name="image">
+                            <i class="fas fa-image fa-2x d-block"></i>
+                            <span>Image</span>
+                        </button>
+                    </div>
+                    <div class="col text-center">
+                        <button type="button" class="btn btn-outline-secondary w-100 py-3" name="heading">
+                            <i class="fas fa-heading fa-2x d-block"></i>
+                            <span>Heading</span>
+                        </button>
+                    </div>
+                    <div class="col text-center">
+                        <button type="button" class="btn btn-outline-secondary w-100 py-3" name="list">
+                            <i class="fas fa-list fa-2x d-block"></i>
+                            <span>List</span>
+                        </button>
+                    </div>
+                    <div class="col text-center">
+                        <button type="button" class="btn btn-outline-secondary w-100 py-3" name="form">
+                            <i class="fas fa-bars fa-2x d-block"></i>
+                            <span>Form</span>
+                        </button>
+                    </div>
+                    <div class="col text-center">
+                        <button type="button" class="btn btn-outline-secondary w-100 py-3" name="spacer">
+                            <i class="fas fa-expand-alt fa-2x d-block"></i>
+                            <span>Spacer</span>
+                        </button>
+                    </div>
+                    <div class="col text-center">
+                        <button type="button" class="btn btn-outline-secondary w-100 py-3" name="link">
+                            <i class="fas fa-link fa-2x d-block"></i>
+                            <span>Link</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <br>
+    </div>
+    <button id="btn-publish" name="btn-publish">Publish</button>
+</form>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+<script>
+    const menu = document.getElementById('blockMenu');
+    function attachClickHandlerToAddButtons() {
+        document.querySelectorAll('.btn-add-block').forEach(btn => {
+            btn.addEventListener('click', function (e) {
+                e.stopPropagation();
+                menu.style.display = menu.style.display === 'none' ? 'block' : 'none';
+                const rect = btn.getBoundingClientRect();
+                menu.style.left = rect.left + "px";
+                menu.style.top = rect.bottom + "px";
+            });
+        });
+    }
+
+    attachClickHandlerToAddButtons();
+
+    document.addEventListener('click', function (e) {
+        if (!menu.contains(e.target)) {
+            menu.style.display = 'none';
+        }
+    });
+
+    constrainInput = (event) => {
+        if (event.target.value.includes('\n')) {
+            if (event.target.name === "title" && event.type === "keyup")
+                event.target.value = event.target.value.replace(/[\r\n\v]+/g, '')
+            if (event.target.name === "block") {
+                event.target.value = event.target.value.replace(/[\r\n\v]+/g, '');
+                const div = document.createElement("div");
+                div.innerHTML = `
+                   <textarea rows="1" cols="30" placeholder="Type/to choose a block" name="block"></textarea>
+        <!-- Nút + đầu tiên -->
+        <button type="button" class="btn btn-dark btn-add-block">+</button>
+
+        <!-- Popup custom menu -->
+        <div id="blockMenu" class="card p-3 shadow" style="display: none; position: absolute; z-index: 1000;">
+            <div class="container" style="min-width: 520px;">
+                <div class="row row-cols-4 g-2">
+                    <div class="col text-center">
+                        <button type="button" class="btn btn-outline-secondary w-100 py-3">
+                            <i class="fas fa-paragraph fa-2x d-block"></i>
+                            <span>Paragraph</span>
+                        </button>
+                    </div>
+                    <div class="col text-center">
+                        <button type="button" class="btn btn-outline-secondary w-100 py-3">
+                            <i class="fas fa-table fa-2x d-block"></i>
+                            <span>Table</span>
+                        </button>
+                    </div>
+                    <div class="col text-center">
+                        <button type="button" class="btn btn-outline-secondary w-100 py-3">
+                            <i class="fas fa-image fa-2x d-block"></i>
+                            <span>Image</span>
+                        </button>
+                    </div>
+                    <div class="col text-center">
+                        <button type="button" class="btn btn-outline-secondary w-100 py-3">
+                            <i class="fas fa-heading fa-2x d-block"></i>
+                            <span>Heading</span>
+                        </button>
+                    </div>
+                    <div class="col text-center">
+                        <button type="button" class="btn btn-outline-secondary w-100 py-3">
+                            <i class="fas fa-list fa-2x d-block"></i>
+                            <span>List</span>
+                        </button>
+                    </div>
+                    <div class="col text-center">
+                        <button type="button" class="btn btn-outline-secondary w-100 py-3">
+                            <i class="fas fa-bars fa-2x d-block"></i>
+                            <span>Form</span>
+                        </button>
+                    </div>
+                    <div class="col text-center">
+                        <button type="button" class="btn btn-outline-secondary w-100 py-3">
+                            <i class="fas fa-expand-alt fa-2x d-block"></i>
+                            <span>Spacer</span>
+                        </button>
+                    </div>
+                    <div class="col text-center">
+                        <button type="button" class="btn btn-outline-secondary w-100 py-3">
+                            <i class="fas fa-link fa-2x d-block"></i>
+                            <span>Link</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+                `;
+                document.getElementById("allblock").appendChild(div);
+                attachClickHandlerToAddButtons();
+                new bootstrap.Popover(div.querySelector('[data-bs-toggle="popover"]'));
+            }
+        }
+        if (event.key === "Backspace" && event.target.value === '' && document.getElementsByName("block").length > 1 && event.type === "keydown") {
+            document.getElementById("allblock").removeChild(document.getElementById("allblock").lastElementChild);
+        }
+    }
+
+    document.getElementsByName("title").forEach(el => {
+        el.addEventListener('keyup', constrainInput)
+    });
+
+    document.getElementsByName("allblock").forEach(el => {
+        el.addEventListener('keyup', constrainInput)
+        el.addEventListener('keydown', constrainInput)
+    });
+</script>
+</html>
