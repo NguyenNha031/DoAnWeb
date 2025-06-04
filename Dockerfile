@@ -3,9 +3,8 @@ FROM gradle:8.2.1-jdk17 AS build
 COPY --chown=gradle:gradle . /home/gradle/project
 WORKDIR /home/gradle/project
 
-# Fix quyền thư mục cache (nếu chưa tồn tại thì tạo mới)
-USER root
-RUN mkdir -p /home/gradle/.gradle && chown -R gradle:gradle /home/gradle/.gradle
+# Dùng thư mục cache an toàn (nằm trong project folder)
+ENV GRADLE_USER_HOME=/home/gradle/project/.gradle
 
 USER gradle
 RUN gradle clean build --no-daemon
