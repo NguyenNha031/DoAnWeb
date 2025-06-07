@@ -87,15 +87,13 @@ public class HomeController_Backend {
     @PostMapping("/")
     public String allSites(Model model,@RequestParam(value = "btn-add",required = false) String cl) throws IOException {
         if(!Objects.equals(cl, null)) {
-            String str_b = "";
             BufferedImage img = ImageIO.read(new File(System.getProperty("user.dir") + "/src/main/resources/images/Logo.png"));
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
             ImageIO.write(img, "png", baos);
             byte[] b = baos.toByteArray();
-            str_b = Arrays.toString(b);
             Site site = new Site();
             site.setName("My Site");
-            site.setLogo(str_b);
+            site.setLogo(b);
             siteService.insertSiteNative(site);
         }
         List<Map<String,String>> sites = new ArrayList<>();
@@ -123,24 +121,14 @@ public class HomeController_Backend {
         if (siteOpt.isEmpty()) return "redirect:/";
 
         Site site = siteOpt.get();
-        String[] byteArray = (site.getLogo()).substring(1,(site.getLogo()).length()-2).toLowerCase().split(", ");
-        byte[] imageBytes = new byte[byteArray.length];
-        for (int i=0; i<byteArray.length; i++) {
-            imageBytes[i] = Byte.parseByte(byteArray[i]);
-        }
-        ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(imageBytes);
+        ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(site.getLogo());
         BufferedImage bufferedImage = ImageIO.read(byteArrayInputStream);
         ImageIO.write(bufferedImage,"png",new File(System.getProperty("user.dir") + "/src/main/resources/images/Logo.png"));
         List<Banner> banners = bannerRepository.findByIdSiteOrderByIdBannerAsc(site.getIdSite());
         List<Map<String, String>> bannerList = new ArrayList<>();
         for (Banner b : banners) {
             Map<String, String> bannerMap = new HashMap<>();
-            String[] byteArray1 = (b.getImage()).substring(1,(b.getImage()).length()-2).toLowerCase().split(", ");
-            byte[] imageBytes1 = new byte[byteArray1.length];
-            for (int i=0; i<byteArray1.length; i++) {
-                imageBytes1[i] = Byte.parseByte(byteArray1[i]);
-            }
-            ByteArrayInputStream byteArrayInputStream1 = new ByteArrayInputStream(imageBytes1);
+            ByteArrayInputStream byteArrayInputStream1 = new ByteArrayInputStream(b.getImage());
             BufferedImage bufferedImage1 = ImageIO.read(byteArrayInputStream1);
             ImageIO.write(bufferedImage1,"png",new File(System.getProperty("user.dir") + "/src/main/resources/images/SliBanner"+b.getIdBanner()+".png"));
             bannerMap.put("image","http://localhost:8888/contents/images/SliBanner"+b.getIdBanner()+".png");
@@ -197,51 +185,37 @@ public class HomeController_Backend {
         Site site = siteOpt.get();
         if(!Objects.equals(btnSave, null)){
             if(!logo.isEmpty()){
-                String str_b = "";
                 BufferedImage img = ImageIO.read(logo.getInputStream());
                 ByteArrayOutputStream baos = new ByteArrayOutputStream();
                 ImageIO.write(img, "png", baos);
                 byte[] b = baos.toByteArray();
-                str_b = Arrays.toString(b);
-                site.setLogo(str_b);
+                site.setLogo(b);
                 siteService.editSite(site);
             }
             if(panner.length>0){
                 bannerService.deleteBanner(site.getIdSite());
                 for(MultipartFile p : panner){
-                    String str_b = "";
                     BufferedImage img = ImageIO.read(p.getInputStream());
                     ByteArrayOutputStream baos = new ByteArrayOutputStream();
                     ImageIO.write(img, "png", baos);
                     byte[] b = baos.toByteArray();
-                    str_b = Arrays.toString(b);
                     Banner banner = new Banner();
                     banner.setIdSite(site.getIdSite());
                     banner.setMota("Ảnh banner/slider");
-                    banner.setImage(str_b);
+                    banner.setImage(b);
                     bannerService.insertNativeBanner(banner);
                 }
             }
         }
 
-        String[] byteArray = (site.getLogo()).substring(1,(site.getLogo()).length()-2).toLowerCase().split(", ");
-        byte[] imageBytes = new byte[byteArray.length];
-        for (int i=0; i<byteArray.length; i++) {
-            imageBytes[i] = Byte.parseByte(byteArray[i]);
-        }
-        ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(imageBytes);
+        ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(site.getLogo());
         BufferedImage bufferedImage = ImageIO.read(byteArrayInputStream);
         ImageIO.write(bufferedImage,"png",new File(System.getProperty("user.dir") + "/src/main/resources/images/Logo.png"));
         List<Banner> banners = bannerRepository.findByIdSiteOrderByIdBannerAsc(site.getIdSite());
         List<Map<String, String>> bannerList = new ArrayList<>();
         for (Banner b : banners) {
             Map<String, String> bannerMap = new HashMap<>();
-            String[] byteArray1 = (b.getImage()).substring(1,(b.getImage()).length()-2).toLowerCase().split(", ");
-            byte[] imageBytes1 = new byte[byteArray1.length];
-            for (int i=0; i<byteArray1.length; i++) {
-                imageBytes1[i] = Byte.parseByte(byteArray1[i]);
-            }
-            ByteArrayInputStream byteArrayInputStream1 = new ByteArrayInputStream(imageBytes1);
+            ByteArrayInputStream byteArrayInputStream1 = new ByteArrayInputStream(b.getImage());
             BufferedImage bufferedImage1 = ImageIO.read(byteArrayInputStream1);
             ImageIO.write(bufferedImage1,"png",new File(System.getProperty("user.dir") + "/src/main/resources/images/SliBanner"+b.getIdBanner()+".png"));
             bannerMap.put("image","http://localhost:8888/contents/images/SliBanner"+b.getIdBanner()+".png");

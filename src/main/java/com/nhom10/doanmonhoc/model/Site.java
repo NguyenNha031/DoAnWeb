@@ -21,7 +21,7 @@ public class Site {
     private String name;
 
     @Column(name = "logo")
-    private String logo;
+    private byte[] logo;
 
     @Column(name = "created_at")
     private LocalDateTime createdAt;
