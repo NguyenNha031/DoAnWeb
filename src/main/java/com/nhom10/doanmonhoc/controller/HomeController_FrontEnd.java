@@ -51,7 +51,6 @@ public class HomeController_FrontEnd {
         return url != null && url.matches("^https?://.*\\.(png|jpg|jpeg|gif|webp)$");
     }
 
-//Hàm tìm hình anh trong block
     private String extractImageFromBlocks(List<Block> blocks) {
         String fallback = "https://xdcs.cdnchinhphu.vn/446259493575335936/2024/8/17/nhatrang1-17238902889991160055539.jpg";
         for (Block block : blocks) {
@@ -70,6 +69,7 @@ public class HomeController_FrontEnd {
 
 //Hàm lấy thời gian
     private String getTimeAgo(LocalDateTime createdAt) {
+        if (createdAt == null) return "Không rõ thời gian";
         Duration duration = Duration.between(createdAt, LocalDateTime.now());
         if (duration.toMinutes() < 1) return "Vừa đăng";
         if (duration.toMinutes() < 60) return "Đã đăng " + duration.toMinutes() + " phút trước";

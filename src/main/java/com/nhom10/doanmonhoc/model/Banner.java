@@ -15,7 +15,7 @@ public class Banner {
     @Column(name = "id_banner")
     private Long idBanner;
 
-    @Column(name = "anh_url")
+    @Column(name = "anh")
     private byte[] image;
 
     private String mota;
