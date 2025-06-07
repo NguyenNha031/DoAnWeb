@@ -119,6 +119,14 @@ public class HomeController_Backend {
             } else {
                 System.err.println("⚠️ Không tìm thấy file Logo.png tại: " + logoPath);
             }
+
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            ImageIO.write(img, "png", baos);
+            byte[] b = baos.toByteArray();
+            Site site = new Site();
+            site.setName("My Site");
+            site.setLogo(b);
+            siteService.insertSiteNative(site);
         }
         List<Map<String,String>> sites = new ArrayList<>();
         for (Site s: siteRepository.findAllByOrderByIdSiteAsc()){
