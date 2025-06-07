@@ -78,35 +78,62 @@ public class HomeController_FrontEnd {
     }
 
     @GetMapping("/site/{id}")
-    public String showHomePage(Model model,@PathVariable("id") Long id) throws IOException {
-        String folderPath = System.getProperty("user.dir") + "/src/main/resources/images/";
+    public String showHomePage(Model model, @PathVariable("id") Long id) throws IOException {
+        String folderPath;
+        if (System.getenv("RENDER") != null) {
+            folderPath = "/tmp/images/";
+        } else {
+            folderPath = System.getProperty("user.dir") + "/src/main/resources/images/";
+        }
+
         Path folder = Paths.get(folderPath);
-        for (File file : Objects.requireNonNull(folder.toFile().listFiles())) {
-            if(file.delete()){
-                System.out.println(file.getName());
+        File folderFile = folder.toFile();
+
+        if (!folderFile.exists()) {
+            folderFile.mkdirs();
+        }
+
+        File[] files = folderFile.listFiles();
+        if (files != null) {
+            for (File file : files) {
+                if (file.delete()) {
+                    System.out.println("🗑️ Đã xóa ảnh: " + file.getName());
+                }
             }
         }
+
         Optional<Site> siteOpt = siteRepository.findById(id);
         if (siteOpt.isEmpty()) return "redirect:/";
         Site site = siteOpt.get();
+
         ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(site.getLogo());
         BufferedImage bufferedImage = ImageIO.read(byteArrayInputStream);
-        ImageIO.write(bufferedImage,"png",new File(System.getProperty("user.dir") + "/src/main/resources/images/Logo.png"));
+        File logoFile = new File(folderPath + "Logo.png");
+        ImageIO.write(bufferedImage, "png", logoFile);
+
         List<Banner> banners = bannerRepository.findByIdSiteOrderByIdBannerAsc(site.getIdSite());
         List<Map<String, String>> bannerList = new ArrayList<>();
         for (Banner b : banners) {
             Map<String, String> bannerMap = new HashMap<>();
-            ByteArrayInputStream byteArrayInputStream1 = new ByteArrayInputStream(b.getImage());
-            BufferedImage bufferedImage1 = ImageIO.read(byteArrayInputStream1);
-            ImageIO.write(bufferedImage1,"png",new File(System.getProperty("user.dir") + "/src/main/resources/images/SliBanner"+b.getIdBanner()+".png"));
-            bannerMap.put("image", "http://localhost:8888/contents/images/SliBanner"+b.getIdBanner()+".png");
+            ByteArrayInputStream bais = new ByteArrayInputStream(b.getImage());
+            BufferedImage bannerImg = ImageIO.read(bais);
+            String bannerFileName = "SliBanner" + b.getIdBanner() + ".png";
+            ImageIO.write(bannerImg, "png", new File(folderPath + bannerFileName));
+
+            String imageUrl = (System.getenv("RENDER") != null)
+                    ? "/contents/images/" + bannerFileName // Render sẽ dùng route public này
+                    : "http://localhost:8888/contents/images/" + bannerFileName; // local dev
+
+            bannerMap.put("image", imageUrl);
             bannerMap.put("tooltip", b.getMota());
             bannerList.add(bannerMap);
         }
         model.addAttribute("bannerList", bannerList);
+
         List<Menu> menus = menuRepository.findByIdSiteOrderByIdMenuAsc(site.getIdSite());
         model.addAttribute("menus", menus);
         model.addAttribute("site", site);
+
         List<Post> allPosts = postRepository.findPublishedPostsByIdSiteOrderByPined(site.getIdSite(), Status.Published);
         List<Map<String, String>> posts = new ArrayList<>();
         if (!allPosts.isEmpty()) {
@@ -123,16 +150,19 @@ public class HomeController_FrontEnd {
             posts.add(postMap);
         }
         model.addAttribute("posts", posts);
+
         Map<Long, Long> menuToPageMap = new HashMap<>();
-        for(Menu menu : menus){
+        for (Menu menu : menus) {
             for (Page p : pageRepository.findPublishedPagesByIdMenuOrderByCreatedAt(menu.getIdMenu(), Status.Published)) {
                 menuToPageMap.put(menu.getIdMenu(), p.getIdPage());
             }
         }
         model.addAttribute("menuToPageMap", menuToPageMap);
         System.out.println("MENU TO PAGE MAP: " + menuToPageMap);
+
         return "Frontend/index";
     }
+
 
     @GetMapping("/tin-tuc/{id}")
     public String showAllNews(Model model, @PathVariable("id") Long id) {
