@@ -17,6 +17,7 @@ import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
+import java.net.URL;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Duration;
@@ -108,29 +109,65 @@ public class HomeController_FrontEnd {
         Optional<Site> siteOpt = siteRepository.findById(id);
         if (siteOpt.isEmpty()) return "redirect:/";
         Site site = siteOpt.get();
+        BufferedImage bufferedImage = null;
+        try {
+            byte[] logoBytes = site.getLogo();
+            if (logoBytes != null && logoBytes.length > 0) {
+                bufferedImage = ImageIO.read(new ByteArrayInputStream(logoBytes));
+            }
+            if (bufferedImage == null) {
+                System.err.println("⚠️ Logo null hoặc không đọc được. Dùng ảnh mặc định.");
+                bufferedImage = ImageIO.read(new URL("https://khoacntt.ntu.edu.vn/Portals/54/Logo-Khoa-CNTT-NTU.png?ver=w1WaDt4_a6t2zoyh_JwxVA%3d%3d"));
+            }
 
-        ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(site.getLogo());
-        BufferedImage bufferedImage = ImageIO.read(byteArrayInputStream);
-        File logoFile = new File(folderPath + "Logo.png");
-        ImageIO.write(bufferedImage, "png", logoFile);
+            if (bufferedImage != null) {
+                File logoFile = new File(folderPath + "Logo.png");
+                ImageIO.write(bufferedImage, "png", logoFile);
+            } else {
+                System.err.println("❌ Không thể đọc được logo nào cả.");
+            }
+
+        } catch (IOException e) {
+            System.err.println("❌ Lỗi khi xử lý logo:");
+            e.printStackTrace();
+        }
 
         List<Banner> banners = bannerRepository.findByIdSiteOrderByIdBannerAsc(site.getIdSite());
         List<Map<String, String>> bannerList = new ArrayList<>();
         for (Banner b : banners) {
             Map<String, String> bannerMap = new HashMap<>();
-            ByteArrayInputStream bais = new ByteArrayInputStream(b.getImage());
-            BufferedImage bannerImg = ImageIO.read(bais);
             String bannerFileName = "SliBanner" + b.getIdBanner() + ".png";
-            ImageIO.write(bannerImg, "png", new File(folderPath + bannerFileName));
 
-            String imageUrl = (System.getenv("RENDER") != null)
-                    ? "/contents/images/" + bannerFileName // Render sẽ dùng route public này
-                    : "http://localhost:8888/contents/images/" + bannerFileName; // local dev
+            try {
+                byte[] imgBytes = b.getImage();
+                if (imgBytes != null && imgBytes.length > 0) {
+                    BufferedImage bannerImg = ImageIO.read(new ByteArrayInputStream(imgBytes));
+                    if (bannerImg != null) {
+                        ImageIO.write(bannerImg, "png", new File(folderPath + bannerFileName));
+                        bannerMap.put("image", "/contents/images/" + bannerFileName);
+                    } else {
+                        System.err.println("⚠️ Banner #" + b.getIdBanner() + " ảnh null → dùng ảnh mặc định.");
+                        bannerMap.put("image", "https://xdcs.cdnchinhphu.vn/thumb_w/900/446259493575335936/2022/9/15/giang-duong-g5-dai-hoc-nha-trang-16632297345331056229971-30-0-595-904-crop-16632297417191182294482.png");
+                    }
+                } else {
+                    System.err.println("⚠️ Banner #" + b.getIdBanner() + " không có ảnh → dùng ảnh mặc định.");
+                    bannerMap.put("image", "https://xdcs.cdnchinhphu.vn/thumb_w/900/446259493575335936/2022/9/15/giang-duong-g5-dai-hoc-nha-trang-16632297345331056229971-30-0-595-904-crop-16632297417191182294482.png");
+                }
 
-            bannerMap.put("image", imageUrl);
-            bannerMap.put("tooltip", b.getMota());
-            bannerList.add(bannerMap);
+                bannerMap.put("tooltip", b.getMota());
+                bannerList.add(bannerMap);
+
+            } catch (IOException e) {
+                System.err.println("❌ Lỗi xử lý ảnh banner #" + b.getIdBanner() + " → dùng ảnh mặc định.");
+                bannerMap.put("image", "https://xdcs.cdnchinhphu.vn/thumb_w/900/446259493575335936/2022/9/15/giang-duong-g5-dai-hoc-nha-trang-16632297345331056229971-30-0-595-904-crop-16632297417191182294482.png");
+                bannerMap.put("tooltip", b.getMota());
+                bannerList.add(bannerMap);
+                e.printStackTrace();
+            }
         }
+        model.addAttribute("bannerList", bannerList);
+
+
         model.addAttribute("bannerList", bannerList);
 
         List<Menu> menus = menuRepository.findByIdSiteOrderByIdMenuAsc(site.getIdSite());
