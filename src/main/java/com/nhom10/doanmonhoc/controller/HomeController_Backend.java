@@ -6,6 +6,7 @@ import com.nhom10.doanmonhoc.repository.*;
 import com.nhom10.doanmonhoc.service.*;
 import org.apache.tomcat.util.http.fileupload.ByteArrayOutputStream;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -88,6 +89,23 @@ public class HomeController_Backend {
         }
         return folderPath;
     }
+    private void injectCommonModelAttributes(Model model, Long idSite) {
+        Site site = siteRepository.findById(idSite).orElseThrow();
+        model.addAttribute("site", site);
+
+        List<Menu> menus = menuRepository.findByIdSiteOrderByIdMenuAsc(idSite);
+        model.addAttribute("menus", menus);
+
+        Map<Long, Long> menuToPageMap = new HashMap<>();
+        for (Menu menu : menus) {
+            List<Page> pages = pageRepository.findPublishedPagesByIdMenuOrderByCreatedAt(menu.getIdMenu(), Status.Published);
+            if (!pages.isEmpty()) {
+                menuToPageMap.put(menu.getIdMenu(), pages.get(0).getIdPage());
+            }
+        }
+        model.addAttribute("menuToPageMap", menuToPageMap);
+    }
+
 
     @GetMapping("/")
     public String sites(Model model) {
@@ -325,6 +343,7 @@ public class HomeController_Backend {
 
     @GetMapping("/allpages/{id}")
     public String allPages(@PathVariable("id") Long id, Model model) {
+        injectCommonModelAttributes(model,id);
         Optional<Site> siteOpt = siteRepository.findById(id);
         if (siteOpt.isEmpty()) return "redirect:/";
 
@@ -337,6 +356,8 @@ public class HomeController_Backend {
         List<Menu> menus = menuRepository.findByIdSiteOrderByIdMenuAsc(site.getIdSite());
         model.addAttribute("menus", menus);
 
+        model.addAttribute("site", site);
+        model.addAttribute("menus", menus);
         return "Backend/allPages";
     }
 

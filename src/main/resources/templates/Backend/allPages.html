@@ -2,7 +2,6 @@
 <html lang="vi" xmlns:th="http://www.thymeleaf.org">
 <head th:replace="~{Fragments/head_backend :: head('Tất cả trang', null)}"></head>
 <body>
-<div th:replace="~{Fragments/header_backend :: header}"></div>
 
 <div class="container mt-5">
     <h2>Danh sách các Trang</h2>
@@ -18,7 +17,8 @@
         <tr th:each="p : ${pages}">
             <td th:text="${p.title}">Tiêu đề</td>
             <td th:text="${p.status}">Status</td>
-            <td th:text="${#dates.format(p.createdAt, 'dd/MM/yyyy HH:mm')}">Ngày</td>
+            <td th:text="${p.createdAt != null ? p.createdAt.format(T(java.time.format.DateTimeFormatter).ofPattern('dd/MM/yyyy HH:mm')) : 'Không rõ'}"></td>
+
         </tr>
         </tbody>
     </table>
