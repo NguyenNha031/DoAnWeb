@@ -6,6 +6,10 @@ import com.nhom10.doanmonhoc.repository.*;
 import com.nhom10.doanmonhoc.service.*;
 import org.apache.tomcat.util.http.fileupload.ByteArrayOutputStream;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -74,7 +78,8 @@ public class HomeController_Backend {
         if (System.getenv("RENDER") != null) {
             folderPath = "/tmp/images/";
         } else {
-            folderPath = System.getProperty("user.dir") + "/src/main/resources/images/";
+            folderPath = getWritableImageFolder();
+
         }
 
         File folder = new File(folderPath);
@@ -133,187 +138,27 @@ public class HomeController_Backend {
         return "Backend/allSites";
     }
     @GetMapping("/editsite/{id}")
-    public String editSite(@PathVariable("id") Long id, Model model) throws IOException {
-        String folderPath = getWritableImageFolder();
-        File folder = new File(folderPath);
-        File[] files = folder.listFiles();
-        if (files != null) {
-            for (File file : files) {
-                if (file.delete()) {
-                    System.out.println("🗑️ Đã xóa ảnh: " + file.getName());
-                }
-            }
-        }
-
-        Optional<Site> siteOpt = siteRepository.findById(id);
-        if (siteOpt.isEmpty()) return "redirect:/";
-
-        Site site = siteOpt.get();
-        if (site.getLogo() != null) {
-            ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(site.getLogo());
-            BufferedImage bufferedImage = ImageIO.read(byteArrayInputStream);
-            if (bufferedImage != null) {
-                ImageIO.write(bufferedImage,"png", new File(getWritableImageFolder() + "Logo.png"));
-
-            }
-        }
-
-        List<Banner> banners = bannerRepository.findByIdSiteOrderByIdBannerAsc(site.getIdSite());
-        List<Map<String, String>> bannerList = new ArrayList<>();
-        for (Banner b : banners) {
-            Map<String, String> bannerMap = new HashMap<>();
-            if (b.getImage() != null) {
-                ByteArrayInputStream byteArrayInputStream1 = new ByteArrayInputStream(b.getImage());
-                BufferedImage bufferedImage1 = ImageIO.read(byteArrayInputStream1);
-                if (bufferedImage1 != null) {
-                    ImageIO.write(bufferedImage1,"png",new File(System.getProperty("user.dir") + "/src/main/resources/images/SliBanner"+b.getIdBanner()+".png"));
-                }
-            } else {
-                bannerMap.put("image","https://via.placeholder.com/800x400?text=No+Image");
-            }
-
-            bannerMap.put("image","http://localhost:8888/contents/images/SliBanner"+b.getIdBanner()+".png");
-            bannerMap.put("tooltip", b.getMota());
-            bannerList.add(bannerMap);
-        }
-        model.addAttribute("bannerList", bannerList);
-        List<Menu> menus = menuRepository.findByIdSiteOrderByIdMenuAsc(site.getIdSite());
-        model.addAttribute("menus", menus);
-        model.addAttribute("site", site);
-        List<Post> allPosts = postRepository.findPublishedPostsByIdSiteOrderByPined(site.getIdSite(), Status.Published);
-        List<Map<String, String>> posts = new ArrayList<>();
-        if (!allPosts.isEmpty()) {
-            Post p = allPosts.get(0);
-            Map<String, String> postMap = new HashMap<>();
-            postMap.put("id", String.valueOf(p.getIdPost()));
-            postMap.put("title", p.getTitle());
-            List<Block> blocks = blockRepository.findByIdPost(p.getIdPost());
-            String imageUrl = extractImageFromBlocks(blocks);
-            postMap.put("image", imageUrl);
-            postMap.put("tooltip", p.getMota());
-            postMap.put("timeAgo", getTimeAgo(p.getCreatedAt()));
-            postMap.put("link", "/post/" + p.getIdPost());
-            posts.add(postMap);
-        }
-        model.addAttribute("posts", posts);
-
-        Map<Long, Long> menuToPageMap = new HashMap<>();
-        for(Menu menu : menus){
-            for (Page p : pageRepository.findPublishedPagesByIdMenuOrderByCreatedAt(menu.getIdMenu(), Status.Published)) {
-                menuToPageMap.put(menu.getIdMenu(), p.getIdPage());
-            }
-        }
-        model.addAttribute("menuToPageMap", menuToPageMap);
-        return "Backend/editSite";
-    }
-    @PostMapping("/editsite/{id}")
-    public String editSites(
-            @PathVariable("id") Long id,
-            @RequestParam(value = "logo", required = false) MultipartFile logo,
-            @RequestParam(value = "panner", required = false) MultipartFile[] panner,
-            @RequestParam(value = "btn-save", required = false) String btnSave,
-            Model model) throws IOException {
-
-        String folderPath = getWritableImageFolder();
-        folderPath = System.getProperty("user.dir") + "/src/main/resources/images/";
-        Path folder = Paths.get(folderPath);
-        for (File file : Objects.requireNonNull(folder.toFile().listFiles())) {
-            if (file.delete()) {
-                System.out.println(file.getName());
-            }
-        }
-
+    public String editSite(@PathVariable("id") Long id, Model model) {
         Optional<Site> siteOpt = siteRepository.findById(id);
         if (siteOpt.isEmpty()) return "redirect:/";
 
         Site site = siteOpt.get();
 
-        if (btnSave != null) {
-            // ✅ Xử lý logo nếu có
-            if (logo != null && !logo.isEmpty()) {
-                BufferedImage img = ImageIO.read(logo.getInputStream());
-                if (img != null) {
-                    ByteArrayOutputStream baos = new ByteArrayOutputStream();
-                    ImageIO.write(img, "png", baos);
-                    byte[] b = baos.toByteArray();
-                    site.setLogo(b);
-                    siteService.editSite(site);
-                }
-            }
-
-            // ✅ Xử lý banner nếu có
-            if (panner != null && panner.length > 0) {
-                bannerService.deleteBanner(site.getIdSite());
-                for (MultipartFile p : panner) {
-                    if (p != null && !p.isEmpty()) {
-                        BufferedImage img = ImageIO.read(p.getInputStream());
-                        if (img != null) {
-                            ByteArrayOutputStream baos = new ByteArrayOutputStream();
-                            ImageIO.write(img, "png", baos);
-                            byte[] b = baos.toByteArray();
-                            Banner banner = new Banner();
-                            banner.setIdSite(site.getIdSite());
-                            banner.setMota("Ảnh banner/slider");
-                            banner.setImage(b);
-                            bannerService.insertNativeBanner(banner);
-                        } else {
-                            System.err.println("⚠️ Không thể đọc ảnh từ file banner: " + p.getOriginalFilename());
-                        }
-                    }
-                }
-            }
-        }
-
-        // Phần sau giữ nguyên để render lại trang
-        if (site.getLogo() != null) {
-            ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(site.getLogo());
-            BufferedImage bufferedImage = ImageIO.read(byteArrayInputStream);
-            if (bufferedImage != null) {
-                ImageIO.write(bufferedImage, "png", new File(getWritableImageFolder() + "Logo.png"));
-
-            }
-        }
-
+        // Load banner từ DB
         List<Banner> banners = bannerRepository.findByIdSiteOrderByIdBannerAsc(site.getIdSite());
         List<Map<String, String>> bannerList = new ArrayList<>();
         for (Banner b : banners) {
             Map<String, String> bannerMap = new HashMap<>();
-            if (b.getImage() != null) {
-                ByteArrayInputStream byteArrayInputStream1 = new ByteArrayInputStream(b.getImage());
-                BufferedImage bufferedImage1 = ImageIO.read(byteArrayInputStream1);
-                if (bufferedImage1 != null) {
-                    ImageIO.write(bufferedImage1, "png", new File(getWritableImageFolder() + "SliBanner" + b.getIdBanner() + ".png"));
-
-                    bannerMap.put("image", "http://localhost:8888/contents/images/SliBanner" + b.getIdBanner() + ".png");
-                }
-            } else {
-                bannerMap.put("image", "https://via.placeholder.com/800x400?text=No+Image");
-            }
+            bannerMap.put("image", "/image/banner/" + b.getIdBanner());
             bannerMap.put("tooltip", b.getMota());
             bannerList.add(bannerMap);
         }
 
         model.addAttribute("bannerList", bannerList);
-        List<Menu> menus = menuRepository.findByIdSiteOrderByIdMenuAsc(site.getIdSite());
-        model.addAttribute("menus", menus);
         model.addAttribute("site", site);
 
-        List<Post> allPosts = postRepository.findPublishedPostsByIdSiteOrderByPined(site.getIdSite(), Status.Published);
-        List<Map<String, String>> posts = new ArrayList<>();
-        if (!allPosts.isEmpty()) {
-            Post p = allPosts.get(0);
-            Map<String, String> postMap = new HashMap<>();
-            postMap.put("id", String.valueOf(p.getIdPost()));
-            postMap.put("title", p.getTitle());
-            List<Block> blocks = blockRepository.findByIdPost(p.getIdPost());
-            String imageUrl = extractImageFromBlocks(blocks);
-            postMap.put("image", imageUrl);
-            postMap.put("tooltip", p.getMota());
-            postMap.put("timeAgo", getTimeAgo(p.getCreatedAt()));
-            postMap.put("link", "/post/" + p.getIdPost());
-            posts.add(postMap);
-        }
-        model.addAttribute("posts", posts);
+        List<Menu> menus = menuRepository.findByIdSiteOrderByIdMenuAsc(site.getIdSite());
+        model.addAttribute("menus", menus);
 
         Map<Long, Long> menuToPageMap = new HashMap<>();
         for (Menu menu : menus) {
@@ -323,7 +168,73 @@ public class HomeController_Backend {
         }
         model.addAttribute("menuToPageMap", menuToPageMap);
 
+        // Tin tức nổi bật
+        List<Post> allPosts = postRepository.findPublishedPostsByIdSiteOrderByPined(site.getIdSite(), Status.Published);
+        List<Map<String, String>> posts = new ArrayList<>();
+        if (!allPosts.isEmpty()) {
+            Post p = allPosts.get(0);
+            Map<String, String> postMap = new HashMap<>();
+            postMap.put("id", String.valueOf(p.getIdPost()));
+            postMap.put("title", p.getTitle());
+            List<Block> blocks = blockRepository.findByIdPost(p.getIdPost());
+            postMap.put("image", extractImageFromBlocks(blocks));
+            postMap.put("tooltip", p.getMota());
+            postMap.put("timeAgo", getTimeAgo(p.getCreatedAt()));
+            postMap.put("link", "/post/" + p.getIdPost());
+            posts.add(postMap);
+        }
+        model.addAttribute("posts", posts);
+
         return "Backend/editSite";
+    }
+
+    @PostMapping("/editsite/{id}")
+    public String editSites(
+            @PathVariable("id") Long id,
+            @RequestParam(value = "logo", required = false) MultipartFile logo,
+            @RequestParam(value = "banner", required = false) MultipartFile[] banners,
+            @RequestParam(value = "btn-save", required = false) String btnSave
+    ) throws IOException {
+
+        Optional<Site> siteOpt = siteRepository.findById(id);
+        if (siteOpt.isEmpty()) return "redirect:/";
+
+        Site site = siteOpt.get();
+
+        if (btnSave != null) {
+            // Logo
+            if (logo != null && !logo.isEmpty()) {
+                site.setLogo(logo.getBytes());
+                siteService.editSite(site);
+            }
+
+            // Banner
+            if (banners != null && banners.length > 0) {
+                bannerService.deleteBanner(site.getIdSite());
+                for (MultipartFile b : banners) {
+                    if (b != null && !b.isEmpty()) {
+                        Banner newBanner = new Banner();
+                        newBanner.setIdSite(site.getIdSite());
+                        newBanner.setMota("Ảnh banner/slider");
+                        newBanner.setImage(b.getBytes());
+                        bannerService.insertNativeBanner(newBanner);
+                    }
+                }
+            }
+        }
+
+        return "redirect:/editsite/" + id;
+    }
+
+    @GetMapping("/image/banner/{id}")
+    public ResponseEntity<byte[]> getBanner(@PathVariable Long id) {
+        Optional<Banner> bannerOpt = bannerRepository.findById(id);
+        if (bannerOpt.isEmpty() || bannerOpt.get().getImage() == null) {
+            return ResponseEntity.notFound().build();
+        }
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.IMAGE_PNG);
+        return new ResponseEntity<>(bannerOpt.get().getImage(), headers, HttpStatus.OK);
     }
 
 
@@ -410,4 +321,24 @@ public class HomeController_Backend {
         }
         return "Backend/addPost";
     }
+
+
+    @GetMapping("/allpages/{id}")
+    public String allPages(@PathVariable("id") Long id, Model model) {
+        Optional<Site> siteOpt = siteRepository.findById(id);
+        if (siteOpt.isEmpty()) return "redirect:/";
+
+        Site site = siteOpt.get();
+        model.addAttribute("site", site);
+
+        List<Page> pages = pageRepository.findAll();
+        model.addAttribute("pages", pages);
+
+        List<Menu> menus = menuRepository.findByIdSiteOrderByIdMenuAsc(site.getIdSite());
+        model.addAttribute("menus", menus);
+
+        return "Backend/allPages";
+    }
+
+
 }

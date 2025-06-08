@@ -19,7 +19,7 @@
             <div class="card h-100 border-0 text-decoration-none text-dark">
 
                 <a th:href="${post.link}" th:title="${post.tooltip}" target="_blank">
-                    <img th:src="${post.image}" class="card-img-top news-img" alt="Tin nổi bật"
+                    <img th:src="@{${post.image}}" class="card-img-top news-img" alt="Tin nổi bật"
                          style="height: 220px; object-fit: cover;">
                 </a>
 

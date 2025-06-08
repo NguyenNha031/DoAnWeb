@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{Fragments/head_backend :: head('Tất cả trang', null)}"></head>
+<body>
+<div th:replace="~{Fragments/header_backend :: header}"></div>
+
+<div class="container mt-5">
+    <h2>Danh sách các Trang</h2>
+    <table class="table table-bordered mt-3">
+        <thead>
+        <tr>
+            <th>Tiêu đề</th>
+            <th>Trạng thái</th>
+            <th>Ngày tạo</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="p : ${pages}">
+            <td th:text="${p.title}">Tiêu đề</td>
+            <td th:text="${p.status}">Status</td>
+            <td th:text="${#dates.format(p.createdAt, 'dd/MM/yyyy HH:mm')}">Ngày</td>
+        </tr>
+        </tbody>
+    </table>
+</div>
+
+</body>
+</html>

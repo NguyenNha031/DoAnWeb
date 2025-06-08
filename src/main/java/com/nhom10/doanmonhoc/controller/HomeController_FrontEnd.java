@@ -4,11 +4,14 @@ import com.nhom10.doanmonhoc.enums.Status;
 import com.nhom10.doanmonhoc.model.*;
 import com.nhom10.doanmonhoc.repository.*;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
-
+import org.springframework.http.HttpHeaders;
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
@@ -268,5 +271,17 @@ public class HomeController_FrontEnd {
         return "Frontend/page-detail";
     }
 
+    @GetMapping("/image/logo/{id}")
+    public ResponseEntity<byte[]> getLogo(@PathVariable Long id) {
+        Optional<Site> siteOpt = siteRepository.findById(id);
+        if (siteOpt.isEmpty() || siteOpt.get().getLogo() == null) {
+            return ResponseEntity.notFound().build();
+        }
 
+        byte[] imageBytes = siteOpt.get().getLogo();
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.IMAGE_PNG);
+        return new ResponseEntity<>(imageBytes, headers, HttpStatus.OK);
+    }
 }
